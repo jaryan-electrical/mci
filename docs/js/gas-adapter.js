@@ -59,14 +59,13 @@
     return reply(j, s);
   }
 
-  /** ثبت‌نام: تلاش مجدد امن با همان rid */
-  function registerWithRetry(body) {
-    body = Object.assign({}, body, { rid: rid() });
-    var attempts = 0, max = 6;
+  /** ارسال با تلاش مجدد (قطع اینترنت، «شلوغ است» یا خطای ۵xx)؛ بدنه‌ی تلاش‌های بعدی با علامت retry */
+  function postWithRetry(path, body, timeoutMs, max, flagRetry) {
+    var attempts = 0;
     function go() {
       attempts += 1;
-      var b = attempts > 1 ? Object.assign({}, body, { retry: 1 }) : body;
-      return callGas({ p: 'register', m: 'POST', b: b }, 35000).then(function (j) {
+      var b = attempts > 1 && flagRetry ? Object.assign({}, body, { retry: 1 }) : body;
+      return callGas({ p: path, m: 'POST', b: b }, timeoutMs).then(function (j) {
         if (j && (j.code === 'BUSY' || j._s >= 500) && attempts < max) return sleep(500 * attempts + Math.random() * 700).then(go);
         return j;
       }, function (e) {
@@ -76,6 +75,8 @@
     }
     return go();
   }
+  /** ثبت‌نام: هر ارسال یک rid یکتا دارد تا تلاش مجدد، دو بار ثبت نشود */
+  function registerWithRetry(body) { return postWithRetry('register', Object.assign({}, body, { rid: rid() }), 35000, 6, true); }
 
   function apiFetch(input, init) {
     init = init || {};
@@ -92,6 +93,7 @@
     if (isAdmin && path !== 'admin/login' && !getToken()) return Promise.resolve(failReply(401, 'AUTH', 'ابتدا وارد شوید.'));
 
     if (path === 'register' && method === 'POST') return registerWithRetry(body || {}).then(toResponse);
+    if (path === 'receipt' && method === 'POST') return postWithRetry('receipt', body || {}, 60000, 3, false).then(toResponse);   // تصویر یکسان دوباره ذخیره نمی‌شود (سرور از هش تشخیص می‌دهد)
     if ((path === 'status' || path === 'ping') && method === 'GET') return callGas({ p: path }, 25000, true).then(toResponse);
 
     return callGas({ p: path, m: method, b: body || {}, q: q, t: isAdmin ? getToken() : '' }, 40000).then(function (j) {

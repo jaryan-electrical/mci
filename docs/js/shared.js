@@ -73,7 +73,8 @@
   }
 
   var DEFAULT_DEGREES = ['کارشناسی', 'کارشناسی ارشد', 'دکتری'];
-  var DEFAULT_MAJORS = ['قدرت', 'الکترونیک', 'مخابرات', 'کنترل', 'مهندسی پزشکی', 'هنوز گرایش انتخاب نکرده‌ام'];
+  var DEFAULT_ENTRY_YEARS = ['ورودی ۰۱ و ماقبل', 'ورودی ۰۲', 'ورودی ۰۳', 'ورودی ۰۴'];
+  var GENDERS = ['زن', 'مرد'];
 
   /**
    * اعتبارسنجی فرم ثبت‌نام. همان تابع در مرورگر و سرور اجرا می‌شود.
@@ -82,7 +83,7 @@
   function validateRegistration(v, opts) {
     opts = opts || {};
     var degrees = opts.degrees || DEFAULT_DEGREES;
-    var majors = opts.majors || DEFAULT_MAJORS;
+    var entryYears = opts.entryYears || DEFAULT_ENTRY_YEARS;
     var e = {}, c = {};
     v = v || {};
     c.firstName = cleanName(v.firstName);
@@ -97,8 +98,10 @@
     if (!c.phone) e.phone = 'شماره موبایل را به شکل ۰۹۱۲۳۴۵۶۷۸۹ وارد کنید.';
     c.degree = normText(v.degree);
     if (degrees.indexOf(c.degree) < 0) e.degree = 'مقطع تحصیلی را انتخاب کنید.';
-    c.major = normText(v.major);
-    if (majors.indexOf(c.major) < 0) e.major = 'گرایش را انتخاب کنید.';
+    c.entryYear = normText(v.entryYear);
+    if (entryYears.indexOf(c.entryYear) < 0) e.entryYear = 'سال ورود به دانشگاه را انتخاب کنید.';
+    c.gender = normText(v.gender);
+    if (GENDERS.indexOf(c.gender) < 0) e.gender = 'جنسیت را انتخاب کنید.';
     if (v.accepted !== true && v.accepted !== 'true' && v.accepted !== 'on') {
       e.accepted = 'برای ادامه باید شرایط شرکت را بپذیرید.';
     }
@@ -226,7 +229,7 @@
     faToEn: faToEn, enToFa: enToFa, fmtNum: fmtNum, normText: normText,
     cleanName: cleanName, normStudentId: normStudentId, normNationalId: normNationalId, normPhone: normPhone,
     validateRegistration: validateRegistration,
-    DEFAULT_DEGREES: DEFAULT_DEGREES, DEFAULT_MAJORS: DEFAULT_MAJORS,
+    DEFAULT_DEGREES: DEFAULT_DEGREES, DEFAULT_ENTRY_YEARS: DEFAULT_ENTRY_YEARS, GENDERS: GENDERS,
     toJalali: toJalali, toGregorian: toGregorian, isJalaliLeap: isJalaliLeap, jalaliMonthLength: jalaliMonthLength,
     MONTHS: MONTHS, WEEKDAYS: WEEKDAYS, TEHRAN_OFFSET_MIN: TEHRAN_OFFSET_MIN,
     tehranParts: tehranParts, fromTehran: fromTehran,

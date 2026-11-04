@@ -294,9 +294,10 @@
     });
     if (c.phone) fc.appendChild(el('li', {}, [el('a', { href: 'tel:' + c.phone.replace(/[^\d+]/g, ''), text: 'تماس: ' + fa(c.phone) })]));
 
-    if (first || S.formFor !== (st.degrees.join('|') + '#' + st.majors.join('|'))) {
-      S.formFor = st.degrees.join('|') + '#' + st.majors.join('|');
-      fillSelect($('#f-degree'), st.degrees); fillSelect($('#f-major'), st.majors);
+    var genders = st.genders || JR.GENDERS;
+    if (first || S.formFor !== (st.degrees.join('|') + '#' + st.entryYears.join('|') + '#' + genders.join('|'))) {
+      S.formFor = st.degrees.join('|') + '#' + st.entryYears.join('|') + '#' + genders.join('|');
+      fillSelect($('#f-degree'), st.degrees); fillSelect($('#f-entryYear'), st.entryYears); fillSelect($('#f-gender'), genders);
       restoreDraft();
     }
   }
@@ -310,7 +311,7 @@
   }
 
   /* ───────────── فرم ───────────── */
-  var FIELDS = ['firstName', 'lastName', 'studentId', 'nationalId', 'phone', 'degree', 'major'];
+  var FIELDS = ['firstName', 'lastName', 'studentId', 'nationalId', 'phone', 'degree', 'entryYear', 'gender'];
   var NUMERIC = ['studentId', 'nationalId', 'phone'];
 
   function readForm() {
@@ -376,7 +377,7 @@
   function submit(retried) {
     var st = S.st;
     var v = readForm();
-    var res = JR.validateRegistration(v, { degrees: st ? st.degrees : undefined, majors: st ? st.majors : undefined });
+    var res = JR.validateRegistration(v, { degrees: st ? st.degrees : undefined, entryYears: st ? st.entryYears : undefined });
     showErrors(res.errors);
     if (!res.ok) {
       formMsg('چند مورد را باید اصلاح کنی؛ موارد قرمز را ببین.');
@@ -420,12 +421,75 @@
   }
   function cardFmt(c) { return String(c).replace(/(\d{4})(?=\d)/g, '$1 '); }
 
+  /* ───────────── رسید واریز: کوچک‌کردن تصویر در مرورگر و ارسال ───────────── */
+  function shrinkImage(file) {
+    return new Promise(function (resolve, reject) {
+      if (!file || (file.type && !/^image\//.test(file.type))) return reject(new Error('type'));
+      if (file.size > 30 * 1024 * 1024) return reject(new Error('big'));
+      var url = URL.createObjectURL(file), img = new Image();
+      img.onload = function () {
+        URL.revokeObjectURL(url);
+        var tries = [[1600, 0.78], [1400, 0.7], [1200, 0.6], [1000, 0.5], [800, 0.45]], i = 0, w0 = img.naturalWidth, h0 = img.naturalHeight;
+        if (!w0 || !h0) return reject(new Error('decode'));
+        (function next() {
+          var s = Math.min(1, tries[i][0] / Math.max(w0, h0));
+          var c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w0 * s)); c.height = Math.max(1, Math.round(h0 * s));
+          var g = c.getContext('2d'); g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height); g.drawImage(img, 0, 0, c.width, c.height);
+          c.toBlob(function (b) {
+            if (!b) return reject(new Error('encode'));
+            if (b.size <= 700 * 1024 || i >= tries.length - 1) { if (b.size <= 880 * 1024) resolve(b); else reject(new Error('big')); return; }
+            i += 1; next();
+          }, 'image/jpeg', tries[i][1]);
+        })();
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('decode')); };
+      img.src = url;
+    });
+  }
+  function blobToBase64(b) {
+    return new Promise(function (resolve, reject) {
+      var fr = new FileReader();
+      fr.onload = function () { resolve(String(fr.result).replace(/^data:[^,]*,/, '')); };
+      fr.onerror = function () { reject(new Error('read')); };
+      fr.readAsDataURL(b);
+    });
+  }
+  function receiptBox(r) {
+    var count = r.receipts || 0;
+    var msg = el('div', { class: 'receipt__msg', role: 'status', 'aria-live': 'polite' });
+    var input = el('input', { type: 'file', accept: 'image/*', class: 'receipt__file', 'aria-label': 'انتخاب تصویر رسید واریز' });
+    var label = el('label', { class: 'copy receipt__btn' }, [el('span', { text: count ? 'ارسال رسید دیگر' : 'انتخاب و ارسال تصویر رسید' }), input]);
+    function show(text, kind) { msg.textContent = text; msg.className = 'receipt__msg' + (kind ? ' receipt__msg--' + kind : ''); }
+    function refreshText() { if (count) show('رسیدت دریافت شد (' + fa(count) + ' فایل). ستاد بعد از بررسی، پرداخت را تأیید می‌کند و این بخش «پرداخت شد» می‌شود.', 'ok'); }
+    refreshText();
+    input.addEventListener('change', function () {
+      var f = input.files && input.files[0];
+      if (!f) return;
+      input.disabled = true; label.classList.add('is-busy'); show('در حال آماده‌سازی و ارسال تصویر…');
+      shrinkImage(f).then(blobToBase64).then(function (b64) {
+        return api('POST', 'api/receipt', { code: r.code, studentId: r.studentId, image: b64 });
+      }).then(function (res) {
+        var j = res.json || {};
+        if (res.status === 200 && j.ok) { count = (j.registration && j.registration.receipts) || count + 1; refreshText(); label.firstChild.textContent = 'ارسال رسید دیگر'; }
+        else show(j.message || 'ارسال انجام نشد؛ دوباره تلاش کن.', 'err');
+      }).catch(function (e) {
+        var m = { type: 'فقط فایل تصویر (عکس یا اسکرین‌شات) را انتخاب کن.', big: 'تصویر خیلی بزرگ است؛ از رسید یک اسکرین‌شات بگیر و آن را بفرست.', decode: 'این تصویر باز نشد؛ فرمت دیگری یا اسکرین‌شات را امتحان کن.' }[e && e.message];
+        show(m || 'اتصال برقرار نشد؛ اینترنت را بررسی کن و دوباره بفرست.', 'err');
+      }).then(function () { input.value = ''; input.disabled = false; label.classList.remove('is-busy'); });
+    });
+    return el('div', { class: 'receipt' }, [
+      el('div', { class: 'receipt__t', text: 'بارگذاری رسید واریز' }),
+      el('div', { class: 'receipt__hint', text: 'بعد از واریز، عکس یا اسکرین‌شات فیش را همین‌جا بفرست (JPG یا PNG).' }),
+      el('div', { class: 'receipt__row' }, [label]), msg
+    ]);
+  }
+
   function renderTicket(r) {
     var wait = r.status === 'waitlist', cancelled = r.status === 'cancelled';
     var main = el('div', { class: 'ticket__main' });
     main.appendChild(el('h3', { class: 'ticket__title' + (wait || cancelled ? ' ticket__title--wait' : ''), text: cancelled ? 'این ثبت‌نام لغو شده است' : wait ? 'در لیست انتظار ثبت شدی' : 'ثبت‌نامت انجام شد' }));
     main.appendChild(el('p', { class: 'ticket__name', text: r.firstName + ' ' + r.lastName }));
-    main.appendChild(el('p', { class: 'ticket__meta', text: r.degree + '، گرایش ' + r.major + '، شماره دانشجویی ' + fa(r.studentId) }));
+    main.appendChild(el('p', { class: 'ticket__meta', text: [r.degree, r.entryYear, r.gender].filter(Boolean).join('، ') + '، شماره دانشجویی ' + fa(r.studentId) }));
 
     var code = el('div', { class: 'ticket__code' }, [el('span', { text: 'کد پیگیری' }), el('b', { text: fa(r.code) })]);
     code.appendChild(el('button', { class: 'copy', type: 'button', text: 'کپی', onclick: function (e) { copyText(r.code, e.currentTarget); } }));
@@ -450,6 +514,7 @@
           if (who) pay.appendChild(el('div', { text: who }));
         }
         if (pi.note) pay.appendChild(el('div', { text: pi.note }));
+        if (pi.receiptUpload) pay.appendChild(receiptBox(r));
       } else {
         pay.appendChild(el('span', { text: 'مبلغ و روش پرداخت به‌زودی از طرف ستاد اعلام می‌شود.' }));
       }
@@ -539,7 +604,7 @@
       var i = $('#f-' + f);
       i.addEventListener('blur', function () {
         if (!i.value) return;
-        var r = JR.validateRegistration(readForm(), { degrees: S.st && S.st.degrees, majors: S.st && S.st.majors });
+        var r = JR.validateRegistration(readForm(), { degrees: S.st && S.st.degrees, entryYears: S.st && S.st.entryYears });
         var p = $('#e-' + f), w = i.closest('.field');
         p.textContent = r.errors[f] || ''; w.classList.toggle('has-error', !!r.errors[f]);
       });

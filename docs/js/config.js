@@ -5,7 +5,7 @@
 window.JR_CONFIG = {
   /* نشانی وب‌اپ Apps Script (بعد از Deploy ← Web app؛ به /exec ختم می‌شود).
      مثال: 'https://script.google.com/macros/s/AKfycb.../exec' */
-  apiUrl: '',
+  apiUrl: 'https://script.google.com/macros/s/AKfycbwKeycPMTJ6cDk7sgRDOo1Sco5l7IxerUmEMCVLYf1Tu8GcjTRSDqxA1RRnhMem-yDk/exec',
 
   /* کمترین فاصله‌ی بروزرسانی صفحه‌ی عمومی (میلی‌ثانیه). Apps Script همزمانیِ محدودی دارد؛
      عدد کوچک‌تر یعنی فشار بیشتر در لحظه‌ی شروع ثبت‌نام. */

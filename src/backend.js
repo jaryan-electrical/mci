@@ -20,10 +20,10 @@ var JR_PAY_FA_ = { paid: 'پرداخت شد', unpaid: 'پرداخت نشده', r
 var JR_STAFF_ACTIONS_ = { checkIn: 1, setPayment: 1, note: 1 };
 
 /* ───────────── ستون‌های برگه‌ها ───────────── */
-var JR_REG_COLS_ = ['seq', 'code', 'status', 'firstName', 'lastName', 'studentId', 'nationalId', 'phone', 'degree', 'major', 'payment', 'paidAmount', 'payRef', 'checkedIn', 'note', 'createdAtFa', 'createdAt', 'id', 'extra'];
-var JR_REG_HEAD_ = ['ردیف', 'کد پیگیری', 'وضعیت', 'نام', 'نام خانوادگی', 'شماره دانشجویی', 'کد ملی', 'موبایل', 'مقطع', 'گرایش', 'پرداخت', 'مبلغ پرداختی', 'شماره پیگیری پرداخت', 'حضور', 'یادداشت', 'زمان ثبت‌نام', 'زمان (میلی‌ثانیه)', 'شناسه', 'اطلاعات فنی'];
+var JR_REG_COLS_ = ['seq', 'code', 'status', 'firstName', 'lastName', 'studentId', 'nationalId', 'phone', 'degree', 'major', 'payment', 'paidAmount', 'payRef', 'checkedIn', 'note', 'createdAtFa', 'createdAt', 'id', 'extra', 'gender', 'entryYear'];
+var JR_REG_HEAD_ = ['ردیف', 'کد پیگیری', 'وضعیت', 'نام', 'نام خانوادگی', 'شماره دانشجویی', 'کد ملی', 'موبایل', 'مقطع', 'گرایش (قدیمی)', 'پرداخت', 'مبلغ پرداختی', 'شماره پیگیری پرداخت', 'حضور', 'یادداشت', 'زمان ثبت‌نام', 'زمان (میلی‌ثانیه)', 'شناسه', 'اطلاعات فنی', 'جنسیت', 'ورودی'];
 var JR_REG_NUM_ = { seq: 1, paidAmount: 1, createdAt: 1 };
-var JR_REG_MAIN_ = { seq: 1, code: 1, status: 1, firstName: 1, lastName: 1, studentId: 1, nationalId: 1, phone: 1, degree: 1, major: 1, payment: 1, paidAmount: 1, payRef: 1, checkedIn: 1, note: 1, createdAt: 1, id: 1 };
+var JR_REG_MAIN_ = { seq: 1, code: 1, status: 1, firstName: 1, lastName: 1, studentId: 1, nationalId: 1, phone: 1, degree: 1, major: 1, payment: 1, paidAmount: 1, payRef: 1, checkedIn: 1, note: 1, createdAt: 1, id: 1, gender: 1, entryYear: 1 };
 var JR_COLL_ = {
   exp: { cols: ['id', 'title', 'amountToman', 'note', 'createdAt'], head: ['شناسه', 'عنوان', 'مبلغ (تومان)', 'توضیح', 'زمان'], num: { amountToman: 1, createdAt: 1 }, bool: {} },
   task: { cols: ['id', 'title', 'done', 'createdAt', 'doneAt'], head: ['شناسه', 'کار', 'انجام شده', 'زمان ایجاد', 'زمان انجام'], num: { createdAt: 1, doneAt: 1 }, bool: { done: 1 } },
@@ -81,9 +81,9 @@ function jrPut(sh, key, row, values) {
 function jrRegToRow(r) {
   var extra = {};
   Object.keys(r).forEach(function (k) { if (!JR_REG_MAIN_[k]) extra[k] = r[k]; });
-  return [r.seq, String(r.code), JR_STATUS_FA_[r.status] || r.status, r.firstName, r.lastName, String(r.studentId), String(r.nationalId), String(r.phone), r.degree, r.major,
+  return [r.seq, String(r.code), JR_STATUS_FA_[r.status] || r.status, r.firstName, r.lastName, String(r.studentId), String(r.nationalId), String(r.phone), r.degree, r.major || '',
     JR_PAY_FA_[r.payment] || r.payment, r.paidAmount == null ? '' : r.paidAmount, r.payRef || '', r.checkedIn ? 'حاضر' : '', r.note || '',
-    JR.fmtShort(r.createdAt) + ' ' + JR.fmtTime(r.createdAt, true), r.createdAt, r.id, JSON.stringify(extra)];
+    JR.fmtShort(r.createdAt) + ' ' + JR.fmtTime(r.createdAt, true), r.createdAt, r.id, JSON.stringify(extra), r.gender || '', r.entryYear || ''];
 }
 function jrReverse(map) { var o = {}; Object.keys(map).forEach(function (k) { o[map[k]] = k; }); return o; }
 function jrRowToReg(v, rowNo) {
@@ -91,9 +91,10 @@ function jrRowToReg(v, rowNo) {
   try { extra = JSON.parse(String(v[18] || '{}')); } catch (e) { extra = {}; }
   var r = {
     id: String(v[17]), seq: Number(v[0]), code: String(v[1]), status: statusRev[v[2]] || String(v[2]),
-    firstName: String(v[3]), lastName: String(v[4]), studentId: String(v[5]), nationalId: String(v[6]), phone: String(v[7]), degree: String(v[8]), major: String(v[9]),
+    firstName: String(v[3]), lastName: String(v[4]), studentId: String(v[5]), nationalId: String(v[6]), phone: String(v[7]), degree: String(v[8]), major: String(v[9] || ''),
     payment: payRev[v[10]] || String(v[10]), paidAmount: v[11] === '' || v[11] == null ? null : Number(v[11]), payRef: String(v[12] || ''),
-    checkedIn: v[13] === 'حاضر', note: String(v[14] || ''), createdAt: Number(v[16])
+    checkedIn: v[13] === 'حاضر', note: String(v[14] || ''), createdAt: Number(v[16]),
+    gender: String(v[19] || ''), entryYear: String(v[20] || '')
   };
   Object.keys(extra).forEach(function (k) { r[k] = extra[k]; });
   Object.defineProperty(r, '__row', { value: rowNo, enumerable: false, writable: true });
@@ -375,7 +376,6 @@ function jrSameStr(a, b) { a = String(a); b = String(b); if (a.length !== b.leng
 function jrRandHex(n) { var h = ''; while (h.length < n) h += Utilities.getUuid().replace(/-/g, ''); return h.slice(0, n); }
 function jrValidUsername(u) { return /^[a-z0-9._-]{3,24}$/.test(u); }
 function jrValidPassword(p) { return typeof p === 'string' && p.length >= 8 && p.length <= 100 && !/^(.)\1+$/.test(p); }
-function jrNoNid(r) { return r && typeof r === 'object' ? Object.assign({}, r, { nationalId: '' }) : r; }
 function jrUserPublic(u) { return { id: u.id, username: u.username, name: u.name, role: u.role, mustChange: !!u.mustChange, lastLoginAt: u.lastLoginAt || null }; }
 function jrNewUser(username, name, role, password, mustChange, now) {
   var salt = jrRandHex(24);
@@ -455,7 +455,8 @@ function jrAdmin(a, method, body, q, req) {
     var db = jrLoadDb({ settings: 1, regs: 1, exp: isAdmin ? 1 : 0, task: 1, users: isAdmin ? 1 : 0 }, now);
     var regs = db.registrations.slice().sort(function (x, y) { return x.seq - y.seq; });
     var stats = JREngine.adminStats(db, now);
-    if (!isAdmin) { regs = regs.map(function (r) { return Object.assign({}, r, { nationalId: '' }); }); stats.finance = null; }
+    regs = regs.map(function (r) { return jrPanelReg(r, isAdmin); });
+    if (!isAdmin) stats.finance = null;
     var wlSh = jrSheet('wl'), wlCount = Math.max(0, wlSh.getLastRow() - 1);
     return jrOk({ now: now, user: jrUserPublic(user), settings: db.settings, stats: stats, registrations: regs, whitelistCount: wlCount,
       expenses: isAdmin ? db.expenses : [], tasks: db.tasks, users: isAdmin ? db.users.map(jrUserPublic) : [], publicPhase: JREngine.phase(db, now) });
@@ -466,14 +467,23 @@ function jrAdmin(a, method, body, q, req) {
     return jrOk({ audit: rows.map(function (r) { return { t: Number(r[0]), by: String(r[2]), act: String(r[3]), detail: String(r[4]) }; }).reverse() });
   }
 
+  if (a === 'receipt' && method === 'GET') {                     // نمایش تصویر رسید (مدیر و همکار ستاد)
+    var dbR = jrLoadDb({ regs: 1 }, now), regR = null, idx = parseInt(q.i, 10);
+    dbR.registrations.forEach(function (x) { if (x.id === String(q.reg || '')) regR = x; });
+    var rec = regR && regR.receipts && idx >= 0 ? regR.receipts[idx] : null;
+    if (!rec) return jrFail(404, 'NOT_FOUND', 'رسید پیدا نشد.');
+    var blob;
+    try { blob = DriveApp.getFileById(rec.id).getBlob(); } catch (eR) { return jrFail(404, 'FILE_GONE', 'فایل رسید در Drive پیدا نشد (شاید حذف شده است).'); }
+    return jrOk({ mime: rec.m || blob.getContentType(), at: rec.at, data: Utilities.base64Encode(blob.getBytes()) });
+  }
+
   if ((m = a.match(/^reg\/([a-f0-9]{16})$/)) && method === 'POST') {
     if (!isAdmin && !JR_STAFF_ACTIONS_[body.action]) return jrFail(403, 'FORBIDDEN', 'این عملیات فقط برای مدیر است.');
     return jrMutate({ settings: 1, regs: 1 }, function (db, t) {
       var r = JREngine.regAction(db, user.username, m[1], body.action, body, t);
       if (!r.ok) return jrFail(jrEngineStatus(r), r.code, r.message, { errors: r.errors });
-      if (!isAdmin) {                                    // همکار ستاد کد ملی را در هیچ پاسخی نمی‌بیند
-        r = Object.assign({}, r, { registration: jrNoNid(r.registration), promoted: jrNoNid(r.promoted) });
-      }
+      // پاسخ برای همکار ستاد بدون کد ملی؛ برای همه بدون شناسه‌ی فایل‌های Drive
+      r = Object.assign({}, r, { registration: jrPanelReg(r.registration, isAdmin), promoted: jrPanelReg(r.promoted, isAdmin) });
       return jrOk(r);
     });
   }
@@ -502,7 +512,13 @@ function jrAdmin(a, method, body, q, req) {
   if (a === 'reset' && method === 'POST') {
     if (body.phrase !== 'پاک شود') return jrFail(400, 'CONFIRM', 'عبارت تأیید درست نیست.');
     if (!jrSameStr(jrHashPw(String(body.password || ''), user.salt), user.hash)) return jrFail(400, 'BAD_PASSWORD', 'رمز عبور درست نیست.');
-    return jrMutate({ settings: 1, regs: 1 }, function (db, t) { return jrOk(JREngine.resetRegistrations(db, user.username, t)); });
+    var gone = [];
+    var resR = jrMutate({ settings: 1, regs: 1 }, function (db, t) {
+      db.registrations.forEach(function (x) { (x.receipts || []).forEach(function (f) { gone.push(f.id); }); });
+      return jrOk(JREngine.resetRegistrations(db, user.username, t));
+    });
+    if (resR.ok) jrTrashFiles(gone);                              // رسیدهای آزمایشی هم از Drive پاک شود
+    return resR;
   }
   if (a === 'export' && method === 'GET') {
     var kind = ['all', 'security', 'phones'].indexOf(q.kind) >= 0 ? q.kind : 'all';
@@ -560,6 +576,89 @@ function jrUsers(body, me) {
   });
 }
 
+/* ───────────── رسید واریز (تصویر در Google Drive، نشانی در Sheet) ───────────── */
+var JR_RECEIPT_MAX_BYTES_ = 900 * 1024;
+var JR_RECEIPT_MAX_B64_ = 1300000;
+var JR_RECEIPT_MAX_COUNT_ = 5;
+
+function jrFolder() {
+  var props = PropertiesService.getScriptProperties(), id = props.getProperty('RECEIPT_FOLDER_ID'), folder = null;
+  if (id) { try { folder = DriveApp.getFolderById(id); } catch (e) { folder = null; } }
+  if (!folder) { folder = DriveApp.createFolder('رسیدهای اردو — جریان'); props.setProperty('RECEIPT_FOLDER_ID', folder.getId()); }
+  return folder;
+}
+/** نوع تصویر را از «بایت‌های ابتدای فایل» تشخیص می‌دهد (به ادعای مرورگر اعتماد نمی‌کنیم) */
+function jrSniffImage(bytes) {
+  function b(i) { return bytes[i] & 255; }
+  if (bytes.length > 12 && b(0) === 0xFF && b(1) === 0xD8 && b(2) === 0xFF) return { mime: 'image/jpeg', ext: 'jpg' };
+  if (bytes.length > 12 && b(0) === 0x89 && b(1) === 0x50 && b(2) === 0x4E && b(3) === 0x47 && b(4) === 0x0D && b(5) === 0x0A && b(6) === 0x1A && b(7) === 0x0A) return { mime: 'image/png', ext: 'png' };
+  if (bytes.length > 12 && b(0) === 0x52 && b(1) === 0x49 && b(2) === 0x46 && b(3) === 0x46 && b(8) === 0x57 && b(9) === 0x45 && b(10) === 0x42 && b(11) === 0x50) return { mime: 'image/webp', ext: 'webp' };
+  return null;
+}
+function jrTrashFiles(ids) {
+  ids.forEach(function (id) { try { DriveApp.getFileById(id).setTrashed(true); } catch (e) { /* ignore */ } });
+}
+function jrFindReg(db, code, sid) {
+  for (var i = 0; i < db.registrations.length; i++) { var r = db.registrations[i]; if (r.code === code && r.studentId === sid) return r; }
+  return null;
+}
+/** آیا این ثبت‌نام الان می‌تواند رسید بفرستد؟ null یعنی بله، وگرنه پاسخ خطا */
+function jrReceiptBlock(db, reg) {
+  var pay = db.settings.payment || {};
+  if (!pay.enabled || pay.receiptUpload === false) return jrFail(403, 'DISABLED', 'بارگذاری رسید فعلاً فعال نیست؛ رسید را برای ستاد بفرستید.');
+  if (reg.status === 'cancelled') return jrFail(409, 'CANCELLED', 'این ثبت‌نام لغو شده است.');
+  if (reg.status === 'waitlist') return jrFail(409, 'WAITLIST', 'هنوز در لیست انتظار هستید؛ بعد از قطعی شدن می‌توانید رسید بفرستید.');
+  if (reg.payment === 'paid') return jrFail(409, 'ALREADY_PAID', 'پرداخت شما قبلاً تأیید شده است.');
+  if ((reg.receipts || []).length >= JR_RECEIPT_MAX_COUNT_) return jrFail(409, 'LIMIT', 'حداکثر ' + JR_RECEIPT_MAX_COUNT_ + ' رسید می‌شود فرستاد؛ برای تغییر با ستاد تماس بگیرید.');
+  return null;
+}
+function jrReceiptUpload(body) {
+  body = body || {};
+  var sid = JR.normStudentId(body.studentId), code = JR.faToEn(body.code || '').replace(/\D/g, '');
+  if (!sid || !code) return jrFail(400, 'INVALID', 'کد پیگیری و شماره دانشجویی را وارد کنید.');
+  if (!jrThrottle('rc_' + sid, 8, 600)) return jrFail(429, 'RATE', 'تعداد ارسال‌ها زیاد بود؛ چند دقیقه بعد دوباره امتحان کنید.');
+  var b64 = String(body.image || '').replace(/^data:[^,]*,/, '').replace(/\s+/g, '');
+  if (!b64 || b64.length > JR_RECEIPT_MAX_B64_ || !/^[A-Za-z0-9+\/]+={0,2}$/.test(b64)) return jrFail(400, 'INVALID_IMAGE', 'تصویر نامعتبر است یا بیش از حد بزرگ است.');
+  var bytes = null;
+  try { bytes = Utilities.base64Decode(b64); } catch (e) { bytes = null; }
+  if (!bytes || bytes.length < 200 || bytes.length > JR_RECEIPT_MAX_BYTES_) return jrFail(400, 'INVALID_IMAGE', 'تصویر نامعتبر است یا بیش از حد بزرگ است.');
+  var kind = jrSniffImage(bytes);
+  if (!kind) return jrFail(400, 'INVALID_IMAGE', 'فقط تصویر (JPG، PNG یا WebP) پذیرفته می‌شود.');
+  var h = jrSha256(b64).slice(0, 24), now = Date.now();
+
+  // بررسی اولیه بدون قفل (ساخت فایل در Drive کند است و نباید قفل ثبت‌نام را نگه دارد)
+  var db0 = jrLoadDb({ settings: 1, regs: 1 }, now), reg0 = jrFindReg(db0, code, sid);
+  if (!reg0) return jrFail(404, 'NOT_FOUND', 'ثبت‌نامی با این مشخصات پیدا نشد.');
+  var same = (reg0.receipts || []).filter(function (x) { return x.h === h; })[0];
+  if (same) return jrOk({ registration: JREngine.selfView(db0, reg0), repeated: true });
+  var blocked0 = jrReceiptBlock(db0, reg0);
+  if (blocked0) return blocked0;
+
+  var file = jrFolder().createFile(Utilities.newBlob(bytes, kind.mime, 'رسید-' + reg0.seq + '-' + reg0.code + '-' + now + '.' + kind.ext));
+  var res = jrMutate({ settings: 1, regs: 1 }, function (db, t) {
+    var reg = jrFindReg(db, code, sid);
+    if (!reg) return jrFail(404, 'NOT_FOUND', 'ثبت‌نامی با این مشخصات پیدا نشد.');
+    var dup = (reg.receipts || []).filter(function (x) { return x.h === h; })[0];
+    if (dup) return jrOk({ registration: JREngine.selfView(db, reg), repeated: true, _dup: true });
+    var blocked = jrReceiptBlock(db, reg);
+    if (blocked) return blocked;
+    reg.receipts = (reg.receipts || []).concat([{ id: file.getId(), at: t, h: h, m: kind.mime }]);
+    JREngine.audit(db, 'ثبت‌نام‌کننده', 'receipt', reg.firstName + ' ' + reg.lastName + ' (#' + reg.seq + ')', t);
+    return jrOk({ registration: JREngine.selfView(db, reg) });
+  });
+  if (!res.ok || res._dup) jrTrashFiles([file.getId()]);    // فایل اضافی/بی‌صاحب نماند
+  delete res._dup;
+  return res;
+}
+/** نسخه‌ی ثبت‌نام برای پنل: شناسه‌ی فایل‌های Drive و (برای همکار ستاد) کد ملی دیده نمی‌شود */
+function jrPanelReg(r, isAdmin) {
+  if (!r || typeof r !== 'object') return r;
+  var o = Object.assign({}, r);
+  if (o.receipts) o.receipts = o.receipts.map(function (x) { return { at: x.at }; });
+  if (!isAdmin) o.nationalId = '';
+  return o;
+}
+
 /* ───────────── مسیریابی ───────────── */
 function jrRoute(req) {
   try {
@@ -568,6 +667,7 @@ function jrRoute(req) {
     if (p === 'ping') return jrOk({ t: Date.now() });
     if (p === 'register' && method === 'POST') return jrRegister(req.b);
     if (p === 'lookup' && method === 'POST') return jrLookup(req.b);
+    if (p === 'receipt' && method === 'POST') return jrReceiptUpload(req.b);
     if (p.indexOf('admin/') === 0) return jrAdmin(p.slice(6), method, req.b, req.q, req);
     return jrFail(404, 'NOT_FOUND', 'پیدا نشد.');
   } catch (e) {
@@ -581,12 +681,13 @@ function doGet(e) {
   return jrOut(jrRoute({ p: p, m: 'GET' }));
 }
 function doPost(e) {
-  var req;
+  var req, txt = '';
   try {
-    var txt = e && e.postData ? String(e.postData.contents || '') : '';
-    if (txt.length > 400000) return jrOut(jrFail(413, 'TOO_LARGE', 'درخواست بزرگ است.'));
+    txt = e && e.postData ? String(e.postData.contents || '') : '';
+    if (txt.length > 1600000) return jrOut(jrFail(413, 'TOO_LARGE', 'درخواست بزرگ است.'));
     req = JSON.parse(txt);
-  } catch (err) { return jrOut(jrFail(400, 'BAD_REQUEST', 'درخواست نامعتبر.')); }
+  } catch (err) { return jrOut(txt.length > 400000 ? jrFail(413, 'TOO_LARGE', 'درخواست بزرگ است.') : jrFail(400, 'BAD_REQUEST', 'درخواست نامعتبر.')); }
+  if (txt.length > 400000 && (!req || req.p !== 'receipt')) return jrOut(jrFail(413, 'TOO_LARGE', 'درخواست بزرگ است.'));   // فقط بارگذاری رسید بدنه‌ی بزرگ دارد
   return jrOut(jrRoute(req || {}));
 }
 
@@ -597,7 +698,8 @@ function jrEnsureSheet(key, head) {
   jrSheets_[key] = sh;
   var f = jrFmts(key), c;
   for (c = 1; c <= f.length; c++) sh.getRange(2, c, Math.max(sh.getMaxRows() - 1, 1), 1).setNumberFormat(f[c - 1]);   // قالب ستون‌ها (ردیف‌های داده)
-  if (sh.getLastRow() < 1) { sh.getRange(1, 1, 1, head.length).setNumberFormat('@'); sh.getRange(1, 1, 1, head.length).setValues([head]); }
+  sh.getRange(1, 1, 1, head.length).setNumberFormat('@');
+  sh.getRange(1, 1, 1, head.length).setValues([head]);                          // تیترها همیشه به‌روز می‌شوند (ستون‌های تازه هم اضافه می‌شود)
   try {
     sh.setFrozenRows(1); sh.setRightToLeft(true);
     sh.getRange(1, 1, 1, head.length).setFontWeight('bold').setBackground('#dbe9fb');
@@ -625,6 +727,7 @@ function setup() {
   jrEnsureSheet('audit', JR_AUDIT_HEAD_);
   try { [6, 7, 8].forEach(function (c) { reg.setColumnWidth(c, 120); }); reg.hideColumns(17, 3); } catch (e) { /* ظاهری */ }
 
+  jrFolder();                                                  // پوشه‌ی رسیدها در Google Drive (اولین بار مجوز Drive را می‌خواهد)
   var db = jrLoadDb({ settings: 1, task: 1, users: 1 }, now);
   if (!jrRead('settings', 2).length) jrWriteSettings(db);
   if (!db.tasks.length) jrWriteColl('task', JREngine.newDb(now).tasks);
@@ -663,7 +766,9 @@ function resetAdminPassword() {
 function selfCheck() {
   var now = Date.now(), db = jrLoadDb({ settings: 1, regs: 1, wl: true, exp: 1, task: 1, users: 1 }, now);
   var st = JREngine.publicStatus(db, now);
-  var msg = 'اتصال سالم است. ظرفیت ' + db.settings.capacity + '، ثبت‌نام قطعی ' + JREngine.count(db, 'confirmed') + '، کاربران ' + db.users.length + '، وضعیت: ' + st.phase;
+  var folderOk = 'بله';
+  try { jrFolder(); } catch (e) { folderOk = 'خیر (' + e.message + ')'; }
+  var msg = 'اتصال سالم است. پوشه‌ی رسیدها: ' + folderOk + '. ظرفیت ' + db.settings.capacity + '، ثبت‌نام قطعی ' + JREngine.count(db, 'confirmed') + '، کاربران ' + db.users.length + '، وضعیت: ' + st.phase;
   console.log(msg); Logger.log(msg);
   return msg;
 }

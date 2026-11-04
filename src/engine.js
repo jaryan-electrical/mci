@@ -68,8 +68,8 @@
       autoPromote: true,
       whitelistEnabled: false,
       degrees: JR.DEFAULT_DEGREES.slice(),
-      majors: JR.DEFAULT_MAJORS.slice(),
-      payment: { enabled: true, cardNumber: '', cardHolder: '', bankName: '', note: '' },
+      entryYears: JR.DEFAULT_ENTRY_YEARS.slice(),
+      payment: { enabled: true, receiptUpload: true, cardNumber: '', cardHolder: '', bankName: '', note: '' },
       meeting: { place: '', time: '', note: '' },
       announcement: '',
       contact: { eitaa: '', telegram: '', instagram: '', phone: '' },
@@ -111,6 +111,7 @@
     var d = newDb(now);
     Object.keys(d).forEach(function (k) { if (db[k] === undefined) db[k] = d[k]; });
     var s = defaultSettings();
+    delete db.settings.majors;                                  // فیلد قدیمیِ «گرایش» حذف شده است
     Object.keys(s).forEach(function (k) {
       if (db.settings[k] === undefined) db.settings[k] = s[k];
       else if (s[k] && typeof s[k] === 'object' && !Array.isArray(s[k])) db.settings[k] = Object.assign({}, s[k], db.settings[k]);
@@ -178,7 +179,9 @@
       contact: s.contact,
       rules: s.rules,
       degrees: s.degrees,
-      majors: s.majors
+      entryYears: s.entryYears,
+      genders: JR.GENDERS,
+      receiptUpload: !!s.payment.enabled && s.payment.receiptUpload !== false
     };
   }
 
@@ -215,7 +218,8 @@
       enabled: !!s.payment.enabled && s.priceToman != null && s.priceToman > 0,
       priceToman: s.priceToman,
       cardNumber: s.payment.cardNumber, cardHolder: s.payment.cardHolder,
-      bankName: s.payment.bankName, note: s.payment.note
+      bankName: s.payment.bankName, note: s.payment.note,
+      receiptUpload: s.payment.receiptUpload !== false
     };
   }
 
@@ -224,7 +228,8 @@
     return {
       code: r.code, seq: r.seq, status: r.status,
       firstName: r.firstName, lastName: r.lastName,
-      studentId: r.studentId, degree: r.degree, major: r.major,
+      studentId: r.studentId, degree: r.degree, entryYear: r.entryYear, gender: r.gender,
+      receipts: (r.receipts || []).length,
       payment: r.payment, checkedIn: !!r.checkedIn,
       position: r.status === 'waitlist' ? waitlistPosition(db, r) : null,
       createdAt: r.createdAt,
@@ -250,7 +255,7 @@
       if (ph.name === 'full' && !s.waitlistEnabled) return err('FULL', 'ظرفیت تکمیل شد و ثبت‌نام بسته شده است.');
     }
 
-    var v = JR.validateRegistration(Object.assign({}, input, opts.admin ? { accepted: true } : {}), { degrees: s.degrees, majors: s.majors });
+    var v = JR.validateRegistration(Object.assign({}, input, opts.admin ? { accepted: true } : {}), { degrees: s.degrees, entryYears: s.entryYears });
     if (!v.ok) return err('INVALID', 'اطلاعات فرم را بررسی کنید.', { errors: v.errors });
     var c = v.clean;
 
@@ -273,7 +278,7 @@
     var reg = {
       id: uid(), seq: db.seq, code: newCode(db), status: status,
       firstName: c.firstName, lastName: c.lastName, studentId: c.studentId, nationalId: c.nationalId,
-      phone: c.phone, degree: c.degree, major: c.major,
+      phone: c.phone, degree: c.degree, entryYear: c.entryYear, gender: c.gender,
       payment: 'unpaid', paidAmount: null, payRef: '', paidAt: null,
       checkedIn: false, checkedInAt: null, note: '',
       createdAt: now, ipTag: (opts.meta && opts.meta.ipTag) || '', source: opts.admin ? 'admin' : 'web'
@@ -382,10 +387,11 @@
           nationalId: f.nationalId != null ? f.nationalId : r.nationalId,
           phone: f.phone != null ? f.phone : r.phone,
           degree: f.degree != null ? f.degree : r.degree,
-          major: f.major != null ? f.major : r.major,
+          entryYear: f.entryYear != null ? f.entryYear : r.entryYear,
+          gender: f.gender != null ? f.gender : r.gender,
           accepted: true
         };
-        var v = JR.validateRegistration(merged, { degrees: s.degrees, majors: s.majors });
+        var v = JR.validateRegistration(merged, { degrees: s.degrees, entryYears: s.entryYears });
         if (!v.ok) return err('INVALID', 'اطلاعات نامعتبر است.', { errors: v.errors });
         var d2 = findDuplicate(db, v.clean, r.id);
         if (d2) return err('DUPLICATE', d2.message);
@@ -435,7 +441,7 @@
     });
     if ('mode' in patch) { if (['auto', 'forceOpen', 'forceClosed'].indexOf(patch.mode) >= 0) n.mode = patch.mode; else bad.mode = 'حالت نامعتبر است.'; }
     ['waitlistEnabled', 'autoPromote', 'whitelistEnabled'].forEach(function (k) { if (k in patch) n[k] = !!patch[k]; });
-    ['degrees', 'majors'].forEach(function (k) {
+    ['degrees', 'entryYears'].forEach(function (k) {
       if (k in patch) {
         var arr = (Array.isArray(patch[k]) ? patch[k] : []).map(function (x) { return str(x, 40); }).filter(Boolean);
         arr = arr.filter(function (x, i) { return arr.indexOf(x) === i; });
@@ -451,7 +457,7 @@
       var pp = patch.payment, card = JR.faToEn(pp.cardNumber || '').replace(/\D/g, '');
       if (card && card.length !== 16) bad.cardNumber = 'شماره کارت باید ۱۶ رقم باشد.';
       n.payment = Object.assign({}, s.payment, {
-        enabled: pp.enabled !== false, cardNumber: card, cardHolder: str(pp.cardHolder, 60), bankName: str(pp.bankName, 40), note: str(pp.note, 200)
+        enabled: pp.enabled !== false, receiptUpload: pp.receiptUpload !== false, cardNumber: card, cardHolder: str(pp.cardHolder, 60), bankName: str(pp.bankName, 40), note: str(pp.note, 200)
       });
     }
     if ('meeting' in patch && patch.meeting) n.meeting = { place: str(patch.meeting.place, 200), time: str(patch.meeting.time, 80), note: str(patch.meeting.note, 300) };
@@ -560,7 +566,7 @@
   /* ───────────── آمار ───────────── */
   function tally(list, key) {
     var o = {};
-    list.forEach(function (r) { o[r[key]] = (o[r[key]] || 0) + 1; });
+    list.forEach(function (r) { var k = r[key] || 'نامشخص'; o[k] = (o[k] || 0) + 1; });
     return Object.keys(o).map(function (k) { return { label: k, n: o[k] }; }).sort(function (a, b) { return b.n - a.n; });
   }
 
@@ -581,7 +587,8 @@
       paid: paid.length, unpaid: confirmed.length - paid.length, checkedIn: checked.length,
       remaining: Math.max(0, s.capacity - confirmed.length),
       lockedFullAt: db.lockedFullAt, openAtMs: s.openAtMs,
-      byDegree: tally(confirmed, 'degree'), byMajor: tally(confirmed, 'major'),
+      byDegree: tally(confirmed, 'degree'), byEntryYear: tally(confirmed, 'entryYear'), byGender: tally(confirmed, 'gender'),
+      receiptsPending: regs.filter(function (r) { return r.status !== 'cancelled' && r.payment === 'unpaid' && (r.receipts || []).length > 0; }).length,
       timeline: times,
       finance: {
         priceToman: s.priceToman,
@@ -619,12 +626,12 @@
       head = ['نام', 'نام خانوادگی', 'موبایل'];
       map = function (r) { return [r.firstName, r.lastName, [r.phone, 1]]; };
     } else {
-      head = ['شماره ثبت‌نام', 'کد پیگیری', 'وضعیت', 'نام', 'نام خانوادگی', 'شماره دانشجویی', 'کد ملی', 'موبایل', 'مقطع', 'گرایش',
-        'پرداخت', 'مبلغ پرداختی (تومان)', 'شماره پیگیری پرداخت', 'حضور', 'زمان ثبت‌نام', 'یادداشت'];
+      head = ['شماره ثبت‌نام', 'کد پیگیری', 'وضعیت', 'نام', 'نام خانوادگی', 'شماره دانشجویی', 'کد ملی', 'موبایل', 'مقطع', 'ورودی', 'جنسیت',
+        'پرداخت', 'مبلغ پرداختی (تومان)', 'شماره پیگیری پرداخت', 'حضور', 'زمان ثبت‌نام', 'یادداشت', 'رسید'];
       map = function (r) {
         return [r.seq, [r.code, 1], STATUS_FA[r.status] || r.status, r.firstName, r.lastName, [r.studentId, 1], [r.nationalId, 1], [r.phone, 1],
-          r.degree, r.major, PAY_FA[r.payment] || '', r.paidAmount || '', r.payRef || '',
-          r.checkedIn ? 'حاضر' : '', JR.fmtShort(r.createdAt) + ' ' + JR.fmtTime(r.createdAt, true), r.note || ''];
+          r.degree, r.entryYear || '', r.gender || '', PAY_FA[r.payment] || '', r.paidAmount || '', r.payRef || '',
+          r.checkedIn ? 'حاضر' : '', JR.fmtShort(r.createdAt) + ' ' + JR.fmtTime(r.createdAt, true), r.note || '', (r.receipts || []).length ? 'دارد' : ''];
       };
     }
     var lines = [head.map(function (h) { return csvCell(h); }).join(',')];

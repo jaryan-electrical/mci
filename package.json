@@ -1,0 +1,12 @@
+{
+  "name": "jaryan-trip-registration",
+  "version": "2.0.0",
+  "description": "سامانه‌ی ثبت‌نام اردو (GitHub Pages + Google Apps Script + Google Sheet) — مجموعه جریان",
+  "private": true,
+  "license": "UNLICENSED",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "build": "node tools/build.js",
+    "test": "node --test test/*.test.js"
+  }
+}

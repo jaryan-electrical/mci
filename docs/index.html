@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; connect-src 'self' https://script.google.com https://script.googleusercontent.com; base-uri 'none'; form-action 'none'; object-src 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>ثبت‌نام اردوی بازدید از همراه اول — جریان</title>
+  <meta name="description" content="ثبت‌نام اردوی بازدید علمی از ساختمان مرکزی همراه اول، ویژه دانشجویان دانشکده مهندسی برق دانشگاه شهید بهشتی. برگزارکننده: مجموعه جریان، بسیج دانشجویی دانشکده مهندسی برق.">
+  <meta name="theme-color" content="#06142b">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="fonts/Vazirmatn.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+  <a class="skip" href="#register">رفتن به فرم ثبت‌نام</a>
+  <div class="notice" id="notice" hidden role="status"></div>
+
+  <!-- ════════════════ هیرو ════════════════ -->
+  <header class="hero" id="top">
+    <svg class="hero__arcs" viewBox="0 0 600 600" aria-hidden="true" focusable="false">
+      <g fill="none" stroke="currentColor" stroke-linecap="round">
+        <path d="M60 300a240 240 0 0 1 240-240" stroke-width="1.5" opacity=".5"/>
+        <path d="M60 300a240 240 0 0 0 240 240" stroke-width="1.5" opacity=".25"/>
+        <path d="M130 300a170 170 0 0 1 170-170" stroke-width="1.5" opacity=".42"/>
+        <path d="M130 300a170 170 0 0 0 170 170" stroke-width="1.5" opacity=".2"/>
+        <path d="M200 300a100 100 0 0 1 100-100" stroke-width="1.5" opacity=".34"/>
+        <path d="M200 300a100 100 0 0 0 100 100" stroke-width="1.5" opacity=".16"/>
+      </g>
+    </svg>
+    <div class="wrap">
+      <div class="topbar">
+        <a class="brand" href="#top" aria-label="مجموعه جریان">
+          <img src="assets/logo-jaryan.svg" alt="جریان" width="112" height="53">
+        </a>
+        <p class="org">بسیج دانشجویی دانشکده مهندسی برق<br>دانشگاه شهید بهشتی</p>
+      </div>
+
+      <div class="hero__body">
+        <div class="hero__copy">
+          <h1 class="hero__title">اردوی بازدید از همراه اول</h1>
+          <p class="hero__lede">بازدید علمی از ساختمان مرکزی همراه اول، ویژه دانشجویان دانشکده مهندسی برق.</p>
+          <ul class="chips">
+            <li class="chip" id="chipDate"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17"/></svg><span id="chipDateText">سه‌شنبه ۱۲ آبان ۱۴۰۵</span></li>
+            <li class="chip chip--dest" id="chipDest"><img id="mciLogo" alt="" hidden><span>ساختمان مرکزی همراه اول</span></li>
+          </ul>
+        </div>
+
+        <div class="hero__live">
+          <figure class="circuit" aria-label="وضعیت ظرفیت">
+            <svg id="circuit" viewBox="0 0 400 250" role="img" aria-labelledby="circuitTitle" focusable="false">
+              <title id="circuitTitle">ظرفیت اردو</title>
+            </svg>
+          </figure>
+          <div class="state" id="state" aria-live="polite"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ════════════════ ثبت‌نام ════════════════ -->
+    <section class="reg" id="register" aria-labelledby="reg-title">
+      <div class="wrap reg__grid">
+        <div class="reg__intro">
+          <h2 class="h2" id="reg-title">فرم ثبت‌نام</h2>
+          <p class="reg__hint" id="regHint"></p>
+          <ul class="reg__tips">
+            <li>اطلاعات را همین حالا پر کن. دکمه‌ی ثبت در لحظه‌ی شروع خودش فعال می‌شود.</li>
+            <li>کد ملی و شماره دانشجویی باید درست باشد؛ برای هماهنگی ورود به ساختمان شرکت استفاده می‌شود.</li>
+            <li>بعد از ثبت، کد پیگیری می‌گیری. آن را نگه دار.</li>
+          </ul>
+        </div>
+
+        <div class="reg__panel">
+          <div id="myTicket" hidden></div>
+          <form id="regForm" novalidate autocomplete="on">
+            <div class="form-grid">
+              <div class="field">
+                <label for="f-firstName">نام</label>
+                <input id="f-firstName" name="firstName" type="text" autocomplete="given-name" maxlength="40" required>
+                <p class="field__err" id="e-firstName" role="alert"></p>
+              </div>
+              <div class="field">
+                <label for="f-lastName">نام خانوادگی</label>
+                <input id="f-lastName" name="lastName" type="text" autocomplete="family-name" maxlength="40" required>
+                <p class="field__err" id="e-lastName" role="alert"></p>
+              </div>
+              <div class="field">
+                <label for="f-studentId">شماره دانشجویی</label>
+                <input id="f-studentId" name="studentId" type="text" inputmode="numeric" autocomplete="off" dir="ltr" maxlength="14" required>
+                <p class="field__err" id="e-studentId" role="alert"></p>
+              </div>
+              <div class="field">
+                <label for="f-nationalId">کد ملی</label>
+                <input id="f-nationalId" name="nationalId" type="text" inputmode="numeric" autocomplete="off" dir="ltr" maxlength="12" required>
+                <p class="field__err" id="e-nationalId" role="alert"></p>
+              </div>
+              <div class="field">
+                <label for="f-phone">شماره موبایل</label>
+                <input id="f-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" dir="ltr" placeholder="09123456789" maxlength="16" required>
+                <p class="field__err" id="e-phone" role="alert"></p>
+              </div>
+              <div class="field">
+                <label for="f-degree">مقطع تحصیلی</label>
+                <select id="f-degree" name="degree" required></select>
+                <p class="field__err" id="e-degree" role="alert"></p>
+              </div>
+              <div class="field field--wide">
+                <label for="f-major">گرایش</label>
+                <select id="f-major" name="major" required></select>
+                <p class="field__err" id="e-major" role="alert"></p>
+              </div>
+            </div>
+
+            <!-- تله‌ی ربات: برای آدم‌ها دیده نمی‌شود -->
+            <div class="hp" aria-hidden="true"><label>وب‌سایت<input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+
+            <label class="check" for="f-accepted">
+              <input id="f-accepted" name="accepted" type="checkbox">
+              <span>شرایط شرکت (پایین همین صفحه) را خوانده‌ام و می‌پذیرم.</span>
+            </label>
+            <p class="field__err" id="e-accepted" role="alert"></p>
+
+            <p class="form-msg" id="formMsg" role="alert" hidden></p>
+            <button class="btn" id="submitBtn" type="submit" disabled>
+              <span class="btn__label" id="submitLabel">در حال بارگذاری…</span>
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ برنامه و مشخصات ════════════════ -->
+    <section class="info" aria-labelledby="program-title">
+      <div class="wrap info__grid">
+        <div class="program">
+          <h2 class="h2" id="program-title">در این بازدید چه می‌بینیم؟</h2>
+          <p class="program__lede">بازدید علمی از ساختمان مرکزی همراه اول؛ از اتاق‌های پایش شبکه تا زیرساخت‌هایی که تماس و اینترنت میلیون‌ها نفر را زنده نگه می‌دارند.</p>
+          <ul class="trace">
+            <li><strong>مانیتورینگ و پایش شبکه</strong><span>مشاهده و بررسی سیستم‌های مانیتورینگ و پایش شبکه</span></li>
+            <li><strong>شبکه و ارتباطات سیار</strong><span>آشنایی با زیرساخت‌های شبکه و ارتباطات سیار</span></li>
+            <li><strong>مدیریت و کنترل شبکه</strong><span>بررسی نحوه مدیریت، کنترل و نظارت بر شبکه ارتباطی</span></li>
+            <li><strong>فناوری‌های مخابرات</strong><span>آشنایی با فناوری‌ها و سامانه‌های مورد استفاده در صنعت مخابرات</span></li>
+            <li><strong>محیط عملیاتی</strong><span>تجربه حضور در محیط عملیاتی یکی از بزرگ‌ترین اپراتورهای ارتباطی کشور</span></li>
+          </ul>
+        </div>
+
+        <aside class="spec" aria-labelledby="spec-title">
+          <h2 class="spec__title" id="spec-title">مشخصات اردو</h2>
+          <dl class="spec__list" id="specList"></dl>
+          <div class="spec__meet" id="specMeet" hidden></div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ════════════════ شرایط ════════════════ -->
+    <section class="rules" aria-labelledby="rules-title">
+      <div class="wrap">
+        <h2 class="h2" id="rules-title">شرایط شرکت</h2>
+        <ul class="rules__list" id="rulesList"></ul>
+      </div>
+    </section>
+
+    <!-- ════════════════ پیگیری ════════════════ -->
+    <section class="track" aria-labelledby="track-title">
+      <div class="wrap track__grid">
+        <div>
+          <h2 class="h2" id="track-title">پیگیری ثبت‌نام</h2>
+          <p class="track__hint">کد پیگیری و شماره دانشجویی‌ات را وارد کن تا وضعیت ثبت‌نام و پرداخت را ببینی.</p>
+        </div>
+        <div>
+          <form id="trackForm" class="track__form" novalidate>
+            <div class="field">
+              <label for="t-code">کد پیگیری</label>
+              <input id="t-code" name="code" type="text" inputmode="numeric" dir="ltr" maxlength="10" autocomplete="off">
+            </div>
+            <div class="field">
+              <label for="t-sid">شماره دانشجویی</label>
+              <input id="t-sid" name="studentId" type="text" inputmode="numeric" dir="ltr" maxlength="14" autocomplete="off">
+            </div>
+            <button class="btn btn--ghost" type="submit">نمایش وضعیت</button>
+          </form>
+          <p class="form-msg" id="trackMsg" role="alert" hidden></p>
+          <div id="trackResult"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap foot__in">
+      <img src="assets/logo-jaryan.svg" alt="جریان" width="84" height="40">
+      <p>این اردو را مجموعه جریان، بسیج دانشجویی دانشکده مهندسی برق دانشگاه شهید بهشتی برگزار می‌کند.</p>
+      <ul class="foot__contact" id="footContact"></ul>
+    </div>
+  </footer>
+
+  <script src="js/config.js"></script>
+  <script src="js/shared.js"></script>
+  <script src="js/gas-adapter.js"></script>
+  <script src="js/site.js"></script>
+</body>
+</html>

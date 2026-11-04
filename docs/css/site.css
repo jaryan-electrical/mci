@@ -1,0 +1,241 @@
+/* صفحه‌ی عمومی ثبت‌نام — جریان × همراه اول */
+
+.wrap { width: 100%; max-width: 1120px; margin-inline: auto; padding-inline: max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-left)); }
+.skip { position: absolute; inset-inline-start: 12px; top: -60px; z-index: 50; background: var(--amber); color: var(--navy-950); padding: 10px 16px; border-radius: 10px; font-weight: 700; text-decoration: none; }
+.skip:focus { top: 12px; }
+.h2 { font-size: clamp(1.5rem, 4.2vw, 2.05rem); font-weight: 800; line-height: 1.45; text-wrap: balance; }
+
+.notice { background: var(--amber); color: var(--navy-950); text-align: center; padding: 10px 16px; font-weight: 700; font-size: 0.95rem; line-height: 1.7; }
+
+/* ═════════ هیرو ═════════ */
+.hero {
+  --h-ink: #eaf2fd;
+  --h-soft: #b4cbe9;
+  position: relative; overflow: hidden; isolation: isolate;
+  color: var(--h-ink);
+  background:
+    radial-gradient(1000px 560px at 88% -14%, rgba(27, 140, 235, 0.55), transparent 62%),
+    radial-gradient(760px 460px at 0% 108%, rgba(56, 174, 247, 0.28), transparent 62%),
+    radial-gradient(circle at 1px 1px, rgba(124, 200, 250, 0.13) 1px, transparent 1.4px) 0 0 / 26px 26px,
+    linear-gradient(165deg, #0b2d61 0%, var(--navy-950) 58%);
+  padding-bottom: 64px;
+  border-bottom: 1px solid rgba(124, 200, 250, 0.22);
+}
+.hero::after { /* گره‌ی تزئینی روی خط پایین هیرو، هم‌زبان با لوگوی جریان */
+  content: ''; position: absolute; bottom: -8px; inset-inline-start: max(20px, calc(50% - 540px + 16px));
+  width: 15px; height: 15px; border-radius: 50%; border: 2.5px solid var(--amber); background: var(--navy-950);
+  box-shadow: 0 0 0 5px var(--bg);
+}
+.hero__arcs { position: absolute; z-index: -1; left: -230px; top: -90px; width: 640px; height: 640px; color: var(--sky-400); opacity: 0.5; pointer-events: none; }
+
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 18px 6px; }
+.brand { display: inline-flex; line-height: 0; }
+.brand img { height: 46px; width: auto; display: block; }
+.org { font-size: 0.8rem; line-height: 1.7; color: var(--h-soft); text-align: end; }
+
+.hero__body { display: grid; gap: 28px; padding-top: 26px; }
+.hero__title {
+  font-size: clamp(2.6rem, 9.5vw, 5.1rem); font-weight: 900; line-height: 1.22; letter-spacing: 0;
+  max-width: 9.5em; text-wrap: balance; color: #fff;
+}
+.hero__lede { margin-top: 16px; font-size: clamp(1rem, 2.6vw, 1.18rem); line-height: 1.95; color: var(--h-soft); max-width: 30em; text-wrap: pretty; }
+
+.chips { list-style: none; margin: 22px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; min-height: 38px;
+  border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 999px; background: rgba(255, 255, 255, 0.05);
+  font-size: 0.92rem; font-weight: 600; color: var(--h-ink);
+}
+.chip svg { width: 18px; height: 18px; fill: none; stroke: var(--sky-300); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.chip img { height: 22px; width: auto; max-width: 90px; object-fit: contain; }
+.chip--logo { background: #fff; color: var(--navy-950); border-color: #fff; }
+
+@media (min-width: 900px) {
+  .hero__body { grid-template-columns: 1.08fr 0.92fr; gap: 48px; align-items: center; padding-top: 44px; }
+  .hero { padding-bottom: 84px; }
+}
+
+/* ─── مدار ۴۰ گره (عنصر شاخص صفحه) ─── */
+.circuit { margin: 0; max-width: 470px; margin-inline: auto; }
+.circuit svg { display: block; width: 100%; height: auto; overflow: visible; }
+.wire { fill: none; stroke: rgba(124, 200, 250, 0.3); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.wire--on { stroke: var(--amber); stroke-width: 3.6; filter: drop-shadow(0 0 5px rgba(240, 177, 40, 0.65)); transition: stroke-dashoffset 1s cubic-bezier(0.3, 0.7, 0.2, 1); }
+.flow { fill: none; stroke: #fff6d8; stroke-width: 2; stroke-linecap: round; stroke-dasharray: 2 46; opacity: 0; animation: flow 2.6s linear infinite; }
+.circuit.is-live .flow { opacity: 0.95; }
+@keyframes flow { to { stroke-dashoffset: -192; } }
+.node { fill: var(--navy-950); stroke: rgba(124, 200, 250, 0.55); stroke-width: 2; transition: fill 0.4s, stroke 0.4s; transform-box: fill-box; transform-origin: center; }
+.pad { fill: var(--navy-950); opacity: 0; transition: opacity 0.4s; }
+.node.on { fill: var(--amber); stroke: var(--amber); }
+.node.on + .pad { opacity: 1; }
+.circuit.is-live .node:not(.on) { stroke: var(--sky-300); }
+.circuit.is-wave .node { animation: ping 0.9s ease-out both; animation-delay: calc(var(--i) * 26ms); }
+@keyframes ping { 0% { transform: scale(1); } 40% { transform: scale(1.55); stroke: #fff; } 100% { transform: scale(1); } }
+.circuit.is-done .wire--on { filter: drop-shadow(0 0 9px rgba(240, 177, 40, 0.95)); }
+
+/* ─── کارت وضعیت ─── */
+.state {
+  margin-top: 18px; padding: 20px 20px 22px; border-radius: var(--r-l);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.025));
+}
+.state__head { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 0.98rem; color: #fff; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--sky-300); flex: none; }
+.dot--live { background: var(--amber); box-shadow: 0 0 0 0 rgba(240, 177, 40, 0.6); animation: pulse 1.8s ease-out infinite; }
+.dot--off { background: #7c8fae; }
+.dot--err { background: #ff7a7f; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(240, 177, 40, 0.55); } 80%, 100% { box-shadow: 0 0 0 12px rgba(240, 177, 40, 0); } }
+.state__sub { margin-top: 10px; color: var(--h-soft); font-size: 0.95rem; line-height: 1.8; }
+.state__when { margin-top: 12px; color: var(--h-soft); font-size: 0.92rem; }
+.state__when b { color: #fff; font-weight: 700; }
+.state__big { margin-top: 6px; font-size: clamp(1.5rem, 5vw, 1.9rem); font-weight: 900; color: #fff; line-height: 1.5; }
+
+.cd { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 14px; direction: rtl; }
+.cd__u { text-align: center; padding: 12px 4px 8px; border-radius: 14px; background: rgba(4, 14, 32, 0.55); border: 1px solid rgba(124, 200, 250, 0.18); }
+.cd__v { display: block; font-size: clamp(1.7rem, 7.2vw, 2.45rem); font-weight: 800; line-height: 1.25; color: #fff; direction: ltr; }
+.cd__v i { display: inline-block; width: 0.64em; text-align: center; font-style: normal; }
+.cd__l { display: block; margin-top: 2px; font-size: 0.78rem; color: var(--h-soft); }
+
+.meter { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; color: #fff; }
+.meter b { font-size: clamp(2.6rem, 9vw, 3.5rem); font-weight: 900; line-height: 1.2; }
+.meter span { color: var(--h-soft); font-size: 1rem; }
+.state__left { color: var(--h-ink); font-weight: 700; margin-top: 2px; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%;
+  min-height: 52px; padding: 0 22px; border: 0; border-radius: 14px; cursor: pointer; text-decoration: none; text-align: center;
+  background: var(--brand); color: var(--on-brand); font-weight: 800; font-size: 1.05rem; line-height: 1.4;
+  transition: transform 0.12s ease, background-color 0.2s, opacity 0.2s;
+}
+.btn:hover:not(:disabled) { background: var(--brand-strong); }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn--amber { background: var(--amber); color: var(--navy-950); margin-top: 16px; }
+.btn--amber:hover:not(:disabled) { background: #ffc43d; }
+.btn--ghost { background: transparent; color: var(--brand); border: 1.5px solid var(--line-strong); }
+.btn--ghost:hover:not(:disabled) { background: var(--surface-2); }
+.btn.is-busy { position: relative; }
+.btn.is-busy .btn__label::after { content: ''; display: inline-block; width: 16px; height: 16px; margin-inline-start: 10px; vertical-align: -3px; border: 2.5px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ═════════ فرم ثبت‌نام ═════════ */
+.reg { padding-block: 56px 64px; }
+.reg__grid { display: grid; gap: 28px; }
+.reg__hint { margin-top: 10px; color: var(--ink-2); max-width: 32em; }
+.reg__tips { margin: 18px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; color: var(--ink-2); font-size: 0.95rem; }
+.reg__tips li { position: relative; padding-inline-start: 26px; }
+.reg__tips li::before { content: ''; position: absolute; inset-inline-start: 0; top: 0.72em; width: 12px; height: 12px; border-radius: 50%; border: 2.5px solid var(--brand); }
+.reg__panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-l); padding: clamp(18px, 4vw, 30px); box-shadow: var(--shadow); }
+@media (min-width: 900px) { .reg__grid { grid-template-columns: 0.78fr 1.22fr; gap: 56px; align-items: start; } .reg__intro { position: sticky; top: 24px; } }
+
+.form-grid { display: grid; gap: 16px 18px; }
+@media (min-width: 620px) { .form-grid { grid-template-columns: 1fr 1fr; } .field--wide { grid-column: 1 / -1; } }
+.field label { display: block; margin-bottom: 6px; font-weight: 700; font-size: 0.92rem; color: var(--ink); }
+.field input, .field select {
+  width: 100%; height: 50px; padding: 0 14px; border-radius: var(--r-m);
+  border: 1.5px solid var(--line-strong); background: var(--surface); color: var(--ink);
+  font-size: 1rem; transition: border-color 0.15s, box-shadow 0.15s;
+}
+.field input[dir='ltr'] { text-align: right; }
+.field input::placeholder { color: var(--muted); opacity: 0.8; }
+.field input:hover, .field select:hover { border-color: var(--muted); }
+.field input:focus, .field select:focus { outline: none; border-color: var(--focus); box-shadow: 0 0 0 4px rgba(27, 140, 235, 0.28); box-shadow: 0 0 0 4px color-mix(in srgb, var(--focus) 28%, transparent); }
+.field select { appearance: none; -webkit-appearance: none; padding-inline-end: 14px; padding-inline-start: 40px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238093b1' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: left 14px center; }
+.field.has-error input, .field.has-error select { border-color: var(--err); }
+.field__err { color: var(--err); font-size: 0.86rem; line-height: 1.6; margin-top: 5px; }
+.field__err:empty { display: none; }
+.hp { position: absolute; top: 0; inset-inline-start: 0; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); opacity: 0; pointer-events: none; }
+
+.check { display: flex; align-items: flex-start; gap: 10px; margin-top: 20px; font-size: 0.95rem; line-height: 1.7; cursor: pointer; }
+.check input { width: 22px; height: 22px; margin: 2px 0 0; flex: none; accent-color: var(--brand); cursor: pointer; }
+.form-msg { margin-top: 14px; padding: 12px 14px; border-radius: var(--r-m); background: var(--err-bg); color: var(--err); font-size: 0.95rem; line-height: 1.7; border: 1px solid var(--err); border-color: color-mix(in srgb, var(--err) 35%, transparent); }
+.form-msg--ok { background: var(--ok-bg); color: var(--ok); border-color: var(--ok); border-color: color-mix(in srgb, var(--ok) 35%, transparent); }
+#regForm .btn { margin-top: 18px; }
+
+/* ─── بلیت ثبت‌نام ─── */
+.ticket { position: relative; display: grid; grid-template-columns: 1fr auto; background: var(--surface); border: 1.5px solid var(--line-strong); border-radius: var(--r-l); overflow: hidden; }
+.ticket__main { padding: 22px 22px 20px; min-width: 0; }
+.ticket__stub { padding: 22px 18px; display: grid; align-content: center; justify-items: center; gap: 2px; min-width: 104px; border-inline-start: 2px dashed var(--line-strong); background: var(--surface-2); text-align: center; }
+.ticket__stub small { font-size: 0.78rem; color: var(--muted); }
+.ticket__stub b { font-size: 2.4rem; line-height: 1.2; font-weight: 900; color: var(--brand); }
+.ticket::before, .ticket::after { content: ''; position: absolute; width: 18px; height: 18px; border-radius: 50%; background: var(--surface); border: 1.5px solid var(--line-strong); inset-inline-end: calc(104px - 9px); }
+.ticket::before { top: -10px; } .ticket::after { bottom: -10px; }
+.ticket__title { font-size: 1.25rem; font-weight: 800; line-height: 1.5; }
+.ticket__title--wait { color: var(--accent-text); }
+.ticket__name { margin-top: 6px; font-weight: 700; }
+.ticket__meta { color: var(--ink-2); font-size: 0.92rem; }
+.ticket__code { margin-top: 16px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.ticket__code span { font-size: 0.85rem; color: var(--muted); }
+.ticket__code b { font-size: 1.7rem; font-weight: 800; letter-spacing: 0.06em; }
+.copy { border: 1.5px solid var(--line-strong); background: transparent; color: var(--brand); border-radius: 10px; min-height: 36px; padding: 0 12px; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+.copy:hover { background: var(--surface-2); }
+.badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 12px; border-radius: 999px; font-size: 0.84rem; font-weight: 700; background: var(--surface-2); color: var(--ink-2); }
+.badge--ok { background: var(--ok-bg); color: var(--ok); }
+.badge--warn { background: var(--warn-bg); color: var(--warn-ink); }
+.pay { margin-top: 16px; padding: 14px 16px; border-radius: var(--r-m); background: var(--warn-bg); color: var(--warn-ink); font-size: 0.93rem; line-height: 1.85; }
+.pay b { font-weight: 800; }
+.pay__card { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+.pay__card code { font-family: var(--f); font-weight: 800; font-size: 1.15rem; letter-spacing: 0.06em; direction: ltr; }
+.ticket-note { margin-top: 14px; font-size: 0.9rem; color: var(--ink-2); }
+.linklike { background: none; border: 0; padding: 0; color: var(--brand); text-decoration: underline; cursor: pointer; font-weight: 700; }
+@media (max-width: 480px) {
+  .ticket { grid-template-columns: 1fr; }
+  .ticket__stub { border-inline-start: 0; border-top: 2px dashed var(--line-strong); grid-auto-flow: column; justify-content: center; gap: 12px; padding: 12px; }
+  .ticket__stub b { font-size: 1.8rem; }
+  .ticket::before, .ticket::after { display: none; }
+}
+
+/* ═════════ برنامه و مشخصات ═════════ */
+.info { padding-block: 60px; background: var(--surface); border-block: 1px solid var(--line); }
+.info__grid { display: grid; gap: 40px; }
+@media (min-width: 900px) { .info__grid { grid-template-columns: 1.25fr 0.75fr; gap: 64px; align-items: start; } }
+.program__lede { margin-top: 10px; color: var(--ink-2); max-width: 34em; }
+.trace { list-style: none; margin: 28px 0 0; padding: 0; }
+.trace li { position: relative; padding-inline-start: 46px; padding-bottom: 24px; }
+.trace li:last-child { padding-bottom: 0; }
+.trace li::before { content: ''; position: absolute; inset-inline-start: 11px; top: 26px; bottom: -4px; width: 2px; background: var(--line-strong); }
+.trace li:last-child::before { display: none; }
+.trace li::after { content: ''; position: absolute; inset-inline-start: 1px; top: 4px; width: 22px; height: 22px; border-radius: 50%; border: 2.5px solid var(--brand); background: radial-gradient(circle, var(--amber) 0 3.6px, var(--surface) 4.2px); }
+.trace strong { display: block; font-weight: 800; font-size: 1.06rem; line-height: 1.7; }
+.trace span { display: block; color: var(--ink-2); font-size: 0.97rem; }
+
+.spec { border: 1.5px solid var(--line-strong); border-radius: var(--r-l); overflow: hidden; background: var(--bg); }
+.spec__title { padding: 13px 20px; background: var(--surface-2); font-size: 1rem; font-weight: 800; border-bottom: 1.5px solid var(--line-strong); }
+.spec__list { margin: 0; padding: 6px 20px 10px; }
+.spec__row { display: flex; align-items: baseline; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--line); }
+.spec__row:last-child { border-bottom: 0; }
+.spec__row dt { flex: 1 1 auto; display: flex; align-items: baseline; gap: 8px; color: var(--muted); font-size: 0.93rem; min-width: 0; }
+.spec__row dt::after { content: ''; flex: 1; min-width: 12px; border-bottom: 2px dotted var(--line-strong); transform: translateY(-4px); }
+.spec__row dd { margin: 0; font-weight: 700; text-align: end; flex: 0 1 auto; font-size: 0.97rem; }
+.spec__meet { margin: 0 20px 18px; padding: 12px 14px; border-radius: var(--r-m); background: var(--surface-2); font-size: 0.92rem; line-height: 1.85; }
+
+/* ═════════ شرایط ═════════ */
+.rules { padding-block: 60px; }
+.rules__list { list-style: none; margin: 22px 0 0; padding: 0; display: grid; gap: 14px 40px; }
+@media (min-width: 760px) { .rules__list { grid-template-columns: 1fr 1fr; } }
+.rules__list li { position: relative; padding-inline-start: 38px; color: var(--ink-2); line-height: 1.9; }
+.rules__list li::before { content: '✓'; position: absolute; inset-inline-start: 0; top: 2px; width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; background: var(--ok-bg); color: var(--ok); font-weight: 900; font-size: 0.9rem; line-height: 1; }
+
+/* ═════════ پیگیری ═════════ */
+.track { padding-block: 8px 72px; }
+.track__grid { display: grid; gap: 24px; padding-top: 48px; border-top: 1px solid var(--line); }
+@media (min-width: 900px) { .track__grid { grid-template-columns: 0.78fr 1.22fr; gap: 56px; } }
+.track__hint { margin-top: 8px; color: var(--ink-2); max-width: 30em; }
+.track__form { display: grid; gap: 14px; align-items: end; }
+@media (min-width: 620px) { .track__form { grid-template-columns: 1fr 1fr auto; } .track__form .btn { width: auto; min-width: 150px; } }
+#trackResult { margin-top: 18px; }
+#trackMsg { margin-top: 12px; }
+
+/* ═════════ پاورقی ═════════ */
+.foot { background: var(--navy-950); color: #9db8dd; padding-block: 40px 48px; }
+.foot__in { display: grid; gap: 14px; justify-items: start; }
+.foot p { max-width: 38em; font-size: 0.92rem; line-height: 1.9; }
+.foot__contact { list-style: none; padding: 0; margin: 4px 0 0; display: flex; gap: 18px; flex-wrap: wrap; font-size: 0.92rem; }
+.foot__contact a, .foot__contact span { color: var(--sky-300); text-decoration: none; font-weight: 600; }
+.foot__contact a:hover { text-decoration: underline; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}

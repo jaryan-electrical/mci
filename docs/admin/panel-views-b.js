@@ -86,7 +86,7 @@
           h('div', { class: 'list' }, unpaid.map(function (r) {
             return h('div', { class: 'list__i' }, [
               h('span', { class: 'n', text: fullName(r) }), h('span', { class: 's sp', dir: 'ltr', style: 'text-align:right', text: P.fa(r.phone) }),
-              h('button', { class: 'b b--sm b--ok', type: 'button', onclick: function () { P.act(P.api('POST', '/api/admin/reg/' + r.id, { action: 'setPayment', payment: 'paid' }), 'پرداخت ثبت شد').then(P.refresh); } }, [P.ico('check'), 'ثبت پرداخت'])
+              (r.receipts || []).length ? h('button', { class: 'b b--sm b--primary', type: 'button', onclick: function () { P.viewReceipts(r, P.refresh); } }, [P.ico('check'), 'بررسی رسید']) : h('button', { class: 'b b--sm b--ok', type: 'button', onclick: function () { P.act(P.api('POST', '/api/admin/reg/' + r.id, { action: 'setPayment', payment: 'paid' }), 'پرداخت ثبت شد').then(P.refresh); } }, [P.ico('check'), 'ثبت پرداخت'])
             ]);
           })),
           h('div', { class: 'row' }, [h('button', { class: 'b b--sm', type: 'button', onclick: function () { P.copy(unpaid.map(function (r) { return r.phone; }).join('\n'), 'شماره‌ها کپی شد'); } }, [P.ico('copy'), 'کپی شماره‌ها برای یادآوری'])])
@@ -334,12 +334,13 @@
 
       /* ۴ — پرداخت */
       var pe = chk('دستور پرداخت به شرکت‌کننده نشان داده شود', st.payment.enabled);
+      var pr = chk('شرکت‌کننده بتواند تصویر رسید واریز را بارگذاری کند', st.payment.receiptUpload !== false);
       var card = h('input', { value: st.payment.cardNumber, dir: 'ltr', inputmode: 'numeric', maxlength: '24', placeholder: '۱۶ رقم' });
       var holder = h('input', { value: st.payment.cardHolder, maxlength: '60' }), bank = h('input', { value: st.payment.bankName, maxlength: '40' }), pnote = h('input', { value: st.payment.note, maxlength: '200', placeholder: 'مثلاً: تا ۲۴ ساعت بعد از ثبت‌نام پرداخت شود' });
       var e4 = { cardNumber: h('p', { class: 'err' }) };
       root.appendChild(h('div', { class: 'mt' }, [section('پرداخت هزینه', 'پرداخت کارت‌به‌کارت است و خود سامانه پولی دریافت نمی‌کند؛ پس از واریز، «پرداخت شد» را در فهرست شرکت‌کنندگان بزنید.', [
-        h('div', { class: 'stack' }, [pe.el, h('div', { class: 'form-grid' }, [fld('شماره کارت', card, null, e4.cardNumber), fld('به نام', holder), fld('بانک', bank), fld('توضیح برای شرکت‌کننده', pnote)])])
-      ], saveBtn(function (b) { save({ payment: { enabled: pe.input.checked, cardNumber: card.value, cardHolder: holder.value, bankName: bank.value, note: pnote.value } }, b, { cardNumber: e4.cardNumber }); }))]));
+        h('div', { class: 'stack' }, [pe.el, pr.el, h('div', { class: 'form-grid' }, [fld('شماره کارت', card, null, e4.cardNumber), fld('به نام', holder), fld('بانک', bank), fld('توضیح برای شرکت‌کننده', pnote)])])
+      ], saveBtn(function (b) { save({ payment: { enabled: pe.input.checked, receiptUpload: pr.input.checked, cardNumber: card.value, cardHolder: holder.value, bankName: bank.value, note: pnote.value } }, b, { cardNumber: e4.cardNumber }); }))]));
 
       /* ۵ — حرکت */
       var mp = h('input', { value: st.meeting.place, maxlength: '200', placeholder: 'مثلاً مقابل ورودی دانشکده‌ی برق' }), mt = h('input', { value: st.meeting.time, maxlength: '80', placeholder: 'مثلاً ساعت ۷:۳۰ صبح' }), mn = h('input', { value: st.meeting.note, maxlength: '300', placeholder: 'مثلاً با سرویس دانشگاه حرکت می‌کنیم' });
@@ -357,13 +358,13 @@
       /* ۷ — گزینه‌های فرم و قوانین */
       var lines = function (a) { return a.join('\n'); };
       var dg = h('textarea', { rows: '4' }), mj = h('textarea', { rows: '6' }), rl = h('textarea', { rows: '8' });
-      dg.value = lines(st.degrees); mj.value = lines(st.majors); rl.value = lines(st.rules);
-      var e7 = { degrees: h('p', { class: 'err' }), majors: h('p', { class: 'err' }) };
+      dg.value = lines(st.degrees); mj.value = lines(st.entryYears); rl.value = lines(st.rules);
+      var e7 = { degrees: h('p', { class: 'err' }), entryYears: h('p', { class: 'err' }) };
       var split = function (t) { return t.split(/\n/).map(function (x) { return x.trim(); }).filter(Boolean); };
       root.appendChild(h('div', { class: 'mt' }, [section('گزینه‌های فرم و قوانین', 'هر مورد در یک خط.', [
-        h('div', { class: 'form-grid' }, [fld('مقطع‌ها', dg, null, e7.degrees), fld('گرایش‌ها', mj, null, e7.majors)]),
+        h('div', { class: 'form-grid' }, [fld('مقطع‌ها', dg, null, e7.degrees), fld('سال‌های ورود', mj, null, e7.entryYears)]),
         fld('قوانین و نکات (در صفحه‌ی ثبت‌نام نمایش داده می‌شود)', rl)
-      ], saveBtn(function (b) { save({ degrees: split(dg.value), majors: split(mj.value), rules: split(rl.value) }, b, e7); }))]));
+      ], saveBtn(function (b) { save({ degrees: split(dg.value), entryYears: split(mj.value), rules: split(rl.value) }, b, e7); }))]));
 
       /* ۸ — منطقه‌ی خطر */
       root.appendChild(h('div', { class: 'mt' }, [section('پشتیبان و پاک‌سازی', 'داده‌ها در Google Sheet شما ذخیره می‌شود و Google خودش تاریخچه‌ی نسخه‌ها را نگه می‌دارد (در Sheet: File ← Version history). قبل از رویدادهای مهم یک نسخه را هم روی دستگاه خودتان نگه دارید.', [

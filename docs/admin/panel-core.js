@@ -71,6 +71,7 @@
     return el('span', { class: 'bd bd--' + m[1], text: m[0] });
   };
   P.payBadge = function (r) {
+    if (r.payment === 'unpaid' && (r.receipts || []).length) return el('span', { class: 'bd bd--info', text: 'رسید ارسال شد' });
     var m = { paid: ['پرداخت شد', 'ok'], unpaid: ['پرداخت نشده', 'warn'], refunded: ['بازگشت وجه', 'info'] }[r.payment] || ['—', ''];
     return el('span', { class: 'bd bd--' + m[1], text: m[0] });
   };
@@ -106,6 +107,33 @@
       document.body.appendChild(a); a.click();
       setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 800);
     }).catch(function () { P.toast('دانلود انجام نشد.', 'err'); });
+  };
+  /** نمایش تصویر رسیدهای یک ثبت‌نام (با دکمه‌ی تأیید پرداخت) */
+  P.viewReceipts = function (r, after) {
+    var list = r.receipts || [];
+    var wrap = el('div', { class: 'receipts' });
+    var can = r.status === 'confirmed' && r.payment !== 'paid';
+    var m = null;
+    var approve = can ? el('button', { class: 'b b--ok', type: 'button', onclick: function () {
+      var price = P.D && P.D.settings && P.D.settings.priceToman;
+      P.act(P.api('POST', '/api/admin/reg/' + r.id, { action: 'setPayment', payment: 'paid', amount: price != null ? String(price) : '' }), 'پرداخت تأیید شد').then(function (res) { if (res.ok) { m.close(); if (after) after(); } });
+    } }, [P.ico('check'), 'تأیید پرداخت']) : null;
+    m = P.modal('رسید واریز — ' + r.firstName + ' ' + r.lastName, [
+      el('p', { class: 'hint', text: list.length ? 'روی تصویر بزنید تا بزرگ شود. بعد از مطابقت مبلغ و زمان با حساب، پرداخت را تأیید کنید.' : 'رسیدی ارسال نشده است.' }),
+      wrap,
+      el('div', { class: 'row row--end mt' }, [el('button', { class: 'b', type: 'button', text: 'بستن', onclick: function () { m.close(); } }), approve])
+    ]);
+    m.box.style.width = 'min(720px, 100%)';
+    list.forEach(function (x, i) {
+      var slot = el('div', { class: 'hint', text: 'در حال بارگذاری تصویر…' });
+      wrap.appendChild(el('div', { class: 'receipt-item' }, [el('div', { class: 'hint', text: 'فایل ' + P.fa(i + 1) + ' — ' + P.d(x.at, { time: true }) }), slot]));
+      P.api('GET', '/api/admin/receipt?reg=' + encodeURIComponent(r.id) + '&i=' + i).then(function (res) {
+        if (!res.ok) { slot.textContent = (res.json && res.json.message) || 'تصویر نمایش داده نشد.'; return; }
+        var img = el('img', { class: 'receipt-img', alt: 'رسید ' + (i + 1), src: 'data:' + res.json.mime + ';base64,' + res.json.data });
+        img.addEventListener('click', function () { img.classList.toggle('is-zoom'); });
+        slot.replaceWith(img);
+      });
+    });
   };
   P.copy = function (text, msg) {
     function done() { P.toast(msg || 'کپی شد', 'ok'); }

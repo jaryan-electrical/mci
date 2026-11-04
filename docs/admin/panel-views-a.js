@@ -46,6 +46,7 @@
         }
         b.appendChild(h('section', { class: 'card stack' }, [
           h('div', { class: 'card__t', text: 'پرداخت' }),
+          (r.receipts || []).length ? h('div', { class: 'row' }, [h('span', { class: 'bd bd--info', text: P.fa(r.receipts.length) + ' رسید ارسال شده' }), h('button', { class: 'b b--sm b--primary', type: 'button', onclick: function () { P.viewReceipts(r, function () { P.refresh().then(render); }); } }, 'مشاهده رسید')]) : null,
           h('div', { class: 'form-grid' }, [
             h('div', { class: 'fld' }, [h('label', { text: 'مبلغ پرداختی (تومان)' }), amount]),
             h('div', { class: 'fld' }, [h('label', { text: 'شماره پیگیری' }), ref])
@@ -66,7 +67,8 @@
         var fields = {}, errs = {};
         function fld(key, label, opts) {
           opts = opts || {};
-          var inp = opts.options ? h('select', {}, opts.options.map(function (o) { return h('option', { value: o, text: o }); })) : h('input', { value: r[key], dir: opts.ltr ? 'ltr' : null, inputmode: opts.ltr ? 'numeric' : null });
+          var optList = opts.options && r[key] && opts.options.indexOf(r[key]) < 0 ? opts.options : (opts.options && !r[key] ? [''].concat(opts.options) : opts.options);
+          var inp = opts.options ? h('select', {}, optList.map(function (o) { return h('option', { value: o, text: o || 'انتخاب کنید' }); })) : h('input', { value: r[key], dir: opts.ltr ? 'ltr' : null, inputmode: opts.ltr ? 'numeric' : null });
           if (opts.options) inp.value = r[key];
           fields[key] = inp; errs[key] = h('p', { class: 'err' });
           return h('div', { class: 'fld' }, [h('label', { text: label }), inp, errs[key]]);
@@ -76,7 +78,7 @@
           h('div', { class: 'form-grid' }, [
             fld('firstName', 'نام'), fld('lastName', 'نام خانوادگی'), fld('studentId', 'شماره دانشجویی', { ltr: true }),
             fld('nationalId', 'کد ملی', { ltr: true }), fld('phone', 'موبایل', { ltr: true }),
-            fld('degree', 'مقطع', { options: st.degrees }), fld('major', 'گرایش', { options: st.majors })
+            fld('degree', 'مقطع', { options: st.degrees }), fld('entryYear', 'سال ورود', { options: st.entryYears }), fld('gender', 'جنسیت', { options: JR.GENDERS })
           ]),
           h('div', { class: 'row' }, [h('button', { class: 'b b--primary', type: 'button', onclick: function () {
             var f = {}; Object.keys(fields).forEach(function (k) { f[k] = fields[k].value; });
@@ -93,7 +95,7 @@
       } else {
         b.appendChild(h('dl', { class: 'kv card' }, [
           h('dt', { text: 'شماره دانشجویی' }), h('dd', { text: P.fa(r.studentId) }),
-          h('dt', { text: 'گرایش' }), h('dd', { text: r.major + ' — ' + r.degree })
+          h('dt', { text: 'مقطع و ورودی' }), h('dd', { text: [r.degree, r.entryYear, r.gender].filter(Boolean).join(' — ') })
         ]));
       }
 
@@ -152,7 +154,7 @@
       h('p', { text: 'قوانین زمان، ظرفیت و فهرست دانشجویان برای افزودن دستی اعمال نمی‌شود.' }),
       h('div', { class: 'form-grid' }, [
         fld('firstName', 'نام'), fld('lastName', 'نام خانوادگی'), fld('studentId', 'شماره دانشجویی', { ltr: true }), fld('nationalId', 'کد ملی', { ltr: true }),
-        fld('phone', 'موبایل', { ltr: true }), fld('degree', 'مقطع', { options: st.degrees }), fld('major', 'گرایش', { options: st.majors }),
+        fld('phone', 'موبایل', { ltr: true }), fld('degree', 'مقطع', { options: st.degrees }), fld('entryYear', 'سال ورود', { options: st.entryYears }), fld('gender', 'جنسیت', { options: JR.GENDERS }),
         h('div', { class: 'fld' }, [h('label', { text: 'وضعیت' }), statusSel])
       ]),
       h('label', { class: 'chk mt' }, [paid, h('span', { text: 'مبلغ را پرداخت کرده است' })]),
@@ -183,6 +185,7 @@
       if (Math.abs(P.clock.skew) > 3000) alerts.push(h('div', { class: 'alert' }, [h('span', { class: 'sp', text: 'ساعت دستگاه شما حدود ' + P.fa(Math.round(Math.abs(P.clock.skew) / 1000)) + ' ثانیه با ساعت سرور فرق دارد. مبنای ثبت‌نام ساعت سرور است؛ زمان‌ها را با «ساعت سرور» بالای صفحه تطبیق دهید.' })]));
       if (admin && st.openAtMs == null && st.mode === 'auto') alerts.push(h('div', { class: 'alert' }, [h('span', { class: 'sp', text: 'زمان شروع ثبت‌نام هنوز تنظیم نشده است؛ تا آن موقع ثبت‌نام باز نمی‌شود.' }), h('button', { class: 'b b--sm b--amber', type: 'button', text: 'تنظیم زمان شروع', onclick: function () { P.go('settings'); } })]));
       if (S.lockedFullAt && S.remaining > 0 && ph === 'full') alerts.push(h('div', { class: 'alert' }, [h('span', { class: 'sp', text: P.fa(S.remaining) + ' صندلی آزاد شده، اما ثبت‌نام عمومی هنوز بسته است.' }), admin ? h('button', { class: 'b b--sm b--amber', type: 'button', text: 'بازگشایی ظرفیت', onclick: function () { P.act(P.api('POST', '/api/admin/control', { action: 'reopen' }), 'ثبت‌نام برای صندلی‌های آزاد باز شد').then(P.refresh); } }) : null]));
+      if (S.receiptsPending) alerts.push(h('div', { class: 'alert' }, [h('span', { class: 'sp', text: P.fa(S.receiptsPending) + ' رسید واریز منتظر بررسی شماست.' }), h('button', { class: 'b b--sm b--amber', type: 'button', text: 'بررسی رسیدها', onclick: function () { P.go('people', { status: 'confirmed', pay: 'unpaid' }); } })]));
       alerts.forEach(function (a) { root.appendChild(a); a.style.marginBottom = '14px'; });
 
       /* نوار وضعیت */
@@ -226,7 +229,8 @@
         P.fillChart(times, S.capacity, st.openAtMs)
       ]);
       var brk = h('section', { class: 'card stack' }, [
-        h('div', { class: 'card__t', text: 'شرکت‌کنندگان بر اساس گرایش' }), P.hbars(S.byMajor, S.confirmed),
+        h('div', { class: 'card__t', text: 'شرکت‌کنندگان بر اساس سال ورود' }), P.hbars(S.byEntryYear, S.confirmed),
+        h('div', { class: 'card__t', style: 'margin-top:6px', text: 'بر اساس جنسیت' }), P.hbars(S.byGender, S.confirmed),
         h('div', { class: 'card__t', style: 'margin-top:6px', text: 'بر اساس مقطع' }), P.hbars(S.byDegree, S.confirmed)
       ]);
       root.appendChild(h('div', { class: 'grid grid--2 mt' }, [chartCard, brk]));
@@ -242,7 +246,7 @@
         h('div', { class: 'card__t', text: 'آخرین ثبت‌نام‌ها' }),
         recent.length ? h('div', { class: 'list' }, recent.map(function (r) {
           return h('button', { class: 'list__i', type: 'button', style: 'background:none;border:0;border-bottom:1px solid var(--line);text-align:start;width:100%;cursor:pointer;font:inherit;color:inherit', onclick: function () { P.openReg(r.id); } }, [
-            h('span', { class: 't', text: P.t(r.createdAt, true) }), h('span', { class: 'n', text: fullName(r) }), h('span', { class: 's sp', text: r.major }), h('span', { class: 's', text: P.fa(r.seq) + '#' })
+            h('span', { class: 't', text: P.t(r.createdAt, true) }), h('span', { class: 'n', text: fullName(r) }), h('span', { class: 's sp', text: r.entryYear || '' }), h('span', { class: 's', text: P.fa(r.seq) + '#' })
           ]);
         })) : h('div', { class: 'empty', text: 'هنوز ثبت‌نامی انجام نشده است.' })
       ]);
@@ -292,7 +296,7 @@
   function matchQ(r, q) {
     if (!q) return true;
     var s = JR.normText(JR.faToEn(q)).toLowerCase();
-    var hay = [fullName(r), r.studentId, r.nationalId, r.phone, r.code, r.major].join(' ').toLowerCase();
+    var hay = [fullName(r), r.studentId, r.nationalId, r.phone, r.code, r.entryYear, r.gender].join(' ').toLowerCase();
     return s.split(' ').every(function (tok) { return hay.indexOf(tok) >= 0; });
   }
   V.people = {
@@ -331,10 +335,12 @@
       document.getElementById('pplCount').textContent = P.fa(list.length) + ' نفر';
       P.clear(wrap);
       if (!list.length) { wrap.appendChild(h('div', { class: 'empty', text: U.q ? 'موردی با این جستجو پیدا نشد.' : 'در این فیلتر موردی نیست.' })); return; }
-      var head = h('tr', {}, ['شماره', 'نام', 'گرایش و مقطع', 'موبایل', 'پرداخت', 'وضعیت', 'حضور', 'زمان ثبت‌نام'].map(function (t) { return h('th', { text: t }); }));
+      var head = h('tr', {}, ['شماره', 'نام', 'ورود و مقطع', 'موبایل', 'پرداخت', 'وضعیت', 'حضور', 'زمان ثبت‌نام'].map(function (t) { return h('th', { text: t }); }));
       var body = list.map(function (r) {
         var payCell = h('td', { 'data-l': 'پرداخت' });
-        if (r.status === 'confirmed' && r.payment !== 'paid') {
+        if (r.status === 'confirmed' && r.payment !== 'paid' && (r.receipts || []).length) {
+          payCell.appendChild(h('button', { class: 'b b--sm b--primary', type: 'button', title: 'مشاهده رسید و تأیید پرداخت', onclick: function (e) { e.stopPropagation(); P.viewReceipts(r, P.refresh); } }, [P.ico('check'), 'بررسی رسید']));
+        } else if (r.status === 'confirmed' && r.payment !== 'paid') {
           payCell.appendChild(h('button', { class: 'b b--sm', type: 'button', title: 'ثبت پرداخت', onclick: function (e) {
             e.stopPropagation();
             P.act(P.api('POST', '/api/admin/reg/' + r.id, { action: 'setPayment', payment: 'paid' }), 'پرداخت ' + fullName(r) + ' ثبت شد').then(P.refresh);
@@ -343,7 +349,7 @@
         var tr = h('tr', { tabindex: '0', onclick: function () { P.openReg(r.id); }, onkeydown: function (e) { if (e.key === 'Enter') P.openReg(r.id); } }, [
           h('td', { class: 'num', 'data-l': 'شماره', text: P.fa(r.seq) }),
           h('td', { 'data-l': 'نام' }, [h('div', { class: 'nm', text: fullName(r) }), h('div', { class: 'sub', text: P.fa(r.studentId) })]),
-          h('td', { 'data-l': 'گرایش' }, [h('div', { text: r.major }), h('div', { class: 'sub', text: r.degree })]),
+          h('td', { 'data-l': 'ورود و مقطع' }, [h('div', { text: r.entryYear || '—' }), h('div', { class: 'sub', text: [r.gender, r.degree].filter(Boolean).join(' · ') })]),
           h('td', { class: 'num', 'data-l': 'موبایل', dir: 'ltr', style: 'text-align:right', text: P.fa(r.phone) }),
           payCell,
           h('td', { 'data-l': 'وضعیت' }, [P.statusBadge(r)]),
@@ -391,7 +397,7 @@
           P.act(P.api('POST', '/api/admin/reg/' + r.id, { action: 'checkIn', value: !r.checkedIn })).then(P.refresh);
         } }, [P.ico('check'), r.checkedIn ? 'لغو حضور' : 'ثبت حضور']);
         box.appendChild(h('div', { class: 'ci-row' + (r.checkedIn ? ' on' : '') }, [
-          h('div', { class: 'info' }, [h('b', { text: fullName(r) }), h('span', { text: P.fa(r.studentId) + ' · ' + r.major })]),
+          h('div', { class: 'info' }, [h('b', { text: fullName(r) }), h('span', { text: P.fa(r.studentId) + ' · ' + (r.entryYear || '') })]),
           r.payment !== 'paid' ? h('span', { class: 'bd bd--warn', text: 'پرداخت نشده' }) : null,
           btn
         ]));

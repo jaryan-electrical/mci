@@ -259,3 +259,9 @@
   .menu-btn.b { display: inline-flex; }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+
+/* رسید واریز */
+.receipts { display: grid; gap: 14px; }
+.receipt-item { overflow: auto; border: 1px solid var(--line); border-radius: 12px; padding: 10px; background: var(--surface-2, transparent); }
+.receipt-img { display: block; max-width: 100%; height: auto; margin-top: 8px; border-radius: 8px; cursor: zoom-in; }
+.receipt-img.is-zoom { max-width: none; cursor: zoom-out; }

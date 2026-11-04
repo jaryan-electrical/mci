@@ -20,5 +20,5 @@ window.JR_CONFIG = {
 
   /* لوگوی همراه اول (اختیاری): فایل را در docs/assets بگذارید و نامش را این‌جا بنویسید.
      مثال: 'assets/mci-logo.svg' */
-  mciLogo: ''
+  mciLogo: 'assets/mci-logo.svg'
 };
